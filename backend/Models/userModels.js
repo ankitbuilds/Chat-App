@@ -9,13 +9,11 @@ const userSchema=mongoose.Schema({
         type: String,
         required: true,
         unique: true,
-
     },
     email:{
         type: String,
         required: true,
         unique: true,
-
     },
     gender:{
         type: String,
@@ -24,15 +22,11 @@ const userSchema=mongoose.Schema({
     },
     password:{
         type:String,
-        required:true,
-        minlength:6,
-
+        required:true
     },
     profilepic:{
         type:String,
-        required: true,
-        default:""
-
+        required: false,
     }
 },{timestamps : true});
 

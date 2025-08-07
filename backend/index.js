@@ -6,24 +6,23 @@ import messageRouter from './route/messageroute.js';
 import cookieParser from 'cookie-parser';
 import userRouter from './route/userRoute.js'
 
-const app=express();
+const app = express();
 dotenv.config();
 
-
-
-app.get('/',(req,res)=>{
+dbconnect();
+app.get('/', (req, res) => {
     res.send('hello');
 })
 
 app.use(express.json());
-app.use(cookieParser);
+app.use(cookieParser());
 
-app.use('/api/auth',authRouter)
-app.use('/api/message',messageRouter)
-app.use('/api/user',userRouter)
-const PORT=process.env.PORT||3000;
+app.use('/api/auth', authRouter)
+app.use('/api/message', messageRouter)
+app.use('/api/user', userRouter)
+const PORT = process.env.PORT || 3000;
 
-app.listen(PORT,()=>{
-    dbconnect();
+app.listen(PORT, () => {
+
     console.log(`server is running at ${PORT}`);
 })
