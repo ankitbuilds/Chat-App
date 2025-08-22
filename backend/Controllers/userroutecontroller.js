@@ -1,6 +1,7 @@
 import User from "../Models/userModels.js";
 import bcryptjs from 'bcryptjs'
 import jwtToken from '../utils/jwtwebToken.js'
+import jwt from 'jsonwebtoken'
 
 export const userRegister = async (req, res) => {
     try {
@@ -66,34 +67,88 @@ export const getAllUsers = async (req, res) => {
     }
 }
 
+
 export const userLogin = async (req, res) => {
     try {
         const { email, password } = req.body;
-        const user = await User.findOne({ email })
-        if (!user) return res.status(500).send({ success: false, message: "Email Doesn't exist register" })
+
+        // check if user exists
+        const user = await User.findOne({ email });
+        if (!user) {
+            return res.status(400).json({
+                success: false,
+                message: "Email doesn't exist, please register",
+            });
+        }
+
+        // check password
         const comparePass = bcryptjs.compareSync(password, user.password || "");
-        if (!comparePass) return res.status(500).send({ success: false, message: "Email or password doesn't match" })
+        if (!comparePass) {
+            return res.status(401).json({
+                success: false,
+                message: "Email or password doesn't match",
+            });
+        }
 
-        jwtToken(user._id, res)
-        res.send(200).send({
-            _id: user.fullname,
-            fullname: user.fullname,
-            username: user.username,
-            profilepic: user.profilepic,
-            email: user.email,
-            message: "Successfully Login"
-        })
+        // create JWT
+        const token = jwt.sign(
+            { id: user._id },
+            process.env.JWT_SECRET,
+            { expiresIn: "1d" }
+        );
 
-    }
-    catch (error) {
-        res.status(500).send({
+        // return user info + token
+        return res.status(200).json({
+            success: true,
+            message: "Successfully logged in",
+            token, // frontend will use this
+            user: {
+                _id: user._id,
+                fullname: user.fullname,
+                username: user.username,
+                profilepic: user.profilepic,
+                email: user.email,
+            },
+        });
+    } catch (error) {
+        console.error("Login error:", error);
+        return res.status(500).json({
             success: false,
-            message: error,
-        })
-        console.log(error);
-
+            message: "Server error",
+        });
     }
-}
+};
+
+
+
+// export const userLogin = async (req, res) => {
+//     try {
+//         const { email, password } = req.body;
+//         const user = await User.findOne({ email })
+//         if (!user) return res.status(500).send({ success: false, message: "Email Doesn't exist register" })
+//         const comparePass = bcryptjs.compareSync(password, user.password || "");
+//         if (!comparePass) return res.status(500).send({ success: false, message: "Email or password doesn't match" })
+
+//         jwtToken(user._id, res)
+//         res.send(200).send({
+//             _id: user.fullname,
+//             fullname: user.fullname,
+//             username: user.username,
+//             profilepic: user.profilepic,
+//             email: user.email,
+//             message: "Successfully Login"
+//         })
+
+//     }
+//     catch (error) {
+//         res.status(500).send({
+//             success: false,
+//             message: error,
+//         })
+//         console.log(error);
+
+//     }
+// }
 
 export const userLogout = async (req, res) => {
     try {
