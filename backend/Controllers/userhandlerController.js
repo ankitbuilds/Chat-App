@@ -1,96 +1,65 @@
 import User from '../Models/userModels.js';
+import Conversation from '../Models/conversationModels.js'; // make sure this is imported
 
-// export const getUserBySearch = async (req, res) => {
-//     try {
-//         const search = req.query.search || '';
-//         // const currentUserID= req.user._conditions._id;
-//         const currentUserID = req.user._id;
-//         const user = await User.find({
-//             $and: [
-//                 {
-//                     $or: [
-//                         { userName: { $regex: '.*' + search + '.*', $options: 'i' } },
-//                         { fullName: { $regex: '.*' + search + '.*', $options: 'i' } }
-//                     ]
-//                 }, {
-//                     _id: { $ne: currentUserID }
-//                 }
-//             ]
-//         }).select('-password').select('email')
-//         res.status(200).send(user)
-
-//     }
-//     catch (error) {
-//         res.status(500).send({
-//             success: false,
-//             message: error
-//         })
-//         console.log(error);
-//     }
-// }
-
+// Search users
 export const getUserBySearch = async (req, res) => {
     try {
-        console.log("👉 req.query:", req.query);
-        console.log("👉 req.user:", req.user);
+        // Match frontend param name: "search"
+        const search = req.query.search?.trim();
 
-        const search = req.query.search?.trim() || "";
-        const currentUserID = req.user?._id || null;
-
-        // If no search term, return empty list instead of error
         if (!search) {
-            return res.json({ success: true, users: [] });
+            return res.status(200).json({ success: true, users: [] });
         }
-
-        // Build search query
-        let query = {
-            $or: [
-                { userName: { $regex: search, $options: "i" } },
-                { fullName: { $regex: search, $options: "i" } },
-                { email: { $regex: search, $options: "i" } } // optional
-            ]
-        };
 
         // Exclude current user if available
-        if (currentUserID) {
-            query = { $and: [query, { _id: { $ne: currentUserID } }] };
-        }
+        const currentUserID = req.user?._id;
 
-        const users = await User.find(query).select("-password");
+        const users = await User.find({
+            $and: [
+                {
+                    $or: [
+                        { fullname: { $regex: search, $options: "i" } },
+                        { username: { $regex: search, $options: "i" } }
+                    ]
+                },
+                currentUserID ? { _id: { $ne: currentUserID } } : {}
+            ]
+        }).select("-password");
 
         return res.status(200).json({ success: true, users });
     } catch (error) {
         console.error("🔥 Search error:", error.message);
-        return res.status(500).json({ success: false, message: error.message });
+        res.status(500).json({ success: false, message: "Server error" });
     }
 };
 
 
-
+// Get current chatters
 export const getCurrentchatters = async (req, res) => {
     try {
-        const currentUserID = req.user._conditions._id;
+        const currentUserID = req.user._id;  // ✅ fixed
+
         const currentchatters = await Conversation.find({
             participants: currentUserID
-        }).sort({
-            updateAt: -1
-        });
-        if (!currentchatters || currentchatters.length === 0) return res.status(200).send([]);
-        const participantsIDs = currentchatters.reduce((ids, conversation) => {
-            const otherparticipants = conversation.participants.filter(id => id != currentUserID);
-            return [...ids, ...otherparticipants]
+        }).sort({ updatedAt: -1 });
 
-        })
-        const otherparticipantsIDs = participantsIDs.filter(id => id.toString() !== currentUserID.toString());
-        const user = await User.find({ _id: { $in: otherparticipantsIDs } }).select("-password").select("-email");
-        const users = otherparticipantsIDs.map(id => user.find(user => user._id.toString() === id.toString));
-        res.status(200).send(users)
+        if (!currentchatters || currentchatters.length === 0) {
+            return res.status(200).json({ success: true, users: [] });
+        }
+
+        // collect other participants
+        const participantsIDs = currentchatters.flatMap(conversation =>
+            conversation.participants.filter(id => id.toString() !== currentUserID.toString())
+        );
+
+        const uniqueIDs = [...new Set(participantsIDs.map(id => id.toString()))];
+
+        const users = await User.find({ _id: { $in: uniqueIDs } })
+            .select("-password -email");
+
+        return res.status(200).json({ success: true, users });
+    } catch (error) {
+        console.error("🔥 Chatters error:", error.message);
+        res.status(500).json({ success: false, message: "Server error" });
     }
-    catch (error) {
-        res.status(500).send({
-            success: false,
-            message: error
-        })
-        console.log(error);
-    }
-}
+};
