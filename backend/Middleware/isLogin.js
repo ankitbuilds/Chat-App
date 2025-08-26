@@ -1,26 +1,74 @@
-import jwt from 'jsonwebtoken'
-import User from '../Models/userModels.js'
+import jwt from 'jsonwebtoken';
+import User from '../Models/userModels.js';
 
-const isLogin = (req, res, next) => {
+const isLogin = async (req, res, next) => {
     try {
-        const token = req.cookies.jwt
-        if (!token) return res.status(500).send({ success: false, message: "User Unauthorize" });
-        const decode = jwt.verify(token, process.env.JWT_SECRET);
-        if (!decode) return res.status(500).send({ success: false, message: "User Unauthorize -Invalid Token" })
-        const user = User.findById(decode.userId).select("-password");
-        if (!user) return res.status(500).send({ success: false, message: "User not found" })
-        req.user = user,
-            next()
-    } catch (error) {
-        console.log(`error in isLogin middleware ${error.message}`);
-        res.status(500).send({
-            success: false,
-            message: error
-        })
-    }
-}
+        let token;
 
-export default isLogin
+        // ✅ Check Authorization header (Bearer token)
+        if (req.headers.authorization && req.headers.authorization.startsWith("Bearer ")) {
+            token = req.headers.authorization.split(" ")[1];
+        } else if (req.cookies.jwt) {
+            // ✅ Fallback to cookies if available
+            token = req.cookies.jwt;
+        }
+
+        if (!token) {
+            return res.status(401).json({ success: false, message: "Unauthorized: No token provided" });
+        }
+
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
+        if (!decoded) {
+            return res.status(401).json({ success: false, message: "Unauthorized: Invalid token" });
+        }
+
+        // ✅ FIX: Add await
+        const user = await User.findById(decoded.id || decoded.userId).select("-password");
+        if (!user) {
+            return res.status(401).json({ success: false, message: "Unauthorized: User not found" });
+        }
+
+        req.user = user;
+        next();
+    } catch (error) {
+        console.error("error in isLogin middleware:", error.message);
+        res.status(401).json({ success: false, message: "Unauthorized: " + error.message });
+    }
+};
+
+export default isLogin;
+
+
+
+
+// import jwt from 'jsonwebtoken'
+// import User from '../Models/userModels.js'
+
+// const isLogin = (req, res, next) => {
+//     try {
+//         const token = req.cookies.jwt
+//         if (!token) return res.status(500).send({ success: false, message: "User Unauthorize" });
+//         const decode = jwt.verify(token, process.env.JWT_SECRET);
+//         if (!decode) return res.status(500).send({ success: false, message: "User Unauthorize -Invalid Token" })
+//         const user = User.findById(decode.userId).select("-password");
+//         if (!user) return res.status(500).send({ success: false, message: "User not found" })
+//         req.user = user,
+//             next()
+//     } catch (error) {
+//         console.log(`error in isLogin middleware ${error.message}`);
+//         res.status(500).send({
+//             success: false,
+//             message: error
+//         })
+//     }
+// }
+
+// export default isLogin
+
+
+
+
 
 // import User from "../Models/userModels.js";
 // import bcrypt from "bcryptjs";
