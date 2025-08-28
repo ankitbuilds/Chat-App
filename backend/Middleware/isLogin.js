@@ -1,39 +1,58 @@
-import jwt from 'jsonwebtoken';
-import User from '../Models/userModels.js';
+
+
+
+import jwt from "jsonwebtoken";
+import User from "../Models/userModels.js";
 
 const isLogin = async (req, res, next) => {
     try {
         let token;
 
-        // ✅ Check Authorization header (Bearer token)
+        // ✅ Get token from header or cookie
         if (req.headers.authorization && req.headers.authorization.startsWith("Bearer ")) {
             token = req.headers.authorization.split(" ")[1];
-        } else if (req.cookies.jwt) {
-            // ✅ Fallback to cookies if available
+        } else if (req.cookies?.jwt) {
             token = req.cookies.jwt;
         }
 
+        // ❌ If no token, return unauthorized
         if (!token) {
-            return res.status(401).json({ success: false, message: "Unauthorized: No token provided" });
+            return res.status(401).json({
+                success: false,
+                message: "Unauthorized: No token provided"
+            });
         }
 
-        const decoded = jwt.verify(token, process.env.JWT_SECRET);
-
-        if (!decoded) {
-            return res.status(401).json({ success: false, message: "Unauthorized: Invalid token" });
+        // ✅ Verify token
+        let decoded;
+        try {
+            decoded = jwt.verify(token, process.env.JWT_SECRET);
+        } catch (err) {
+            return res.status(401).json({
+                success: false,
+                message: "Unauthorized: Invalid or expired token"
+            });
         }
 
-        // ✅ FIX: Add await
-        const user = await User.findById(decoded.id || decoded.userId).select("-password");
+        // ✅ Use only decoded.id (we stored { id: user._id } at login)
+        const user = await User.findById(decoded.id).select("-password");
+
         if (!user) {
-            return res.status(401).json({ success: false, message: "Unauthorized: User not found" });
+            return res.status(401).json({
+                success: false,
+                message: "Unauthorized: User not found"
+            });
         }
 
+        // ✅ Attach user to request
         req.user = user;
         next();
     } catch (error) {
-        console.error("error in isLogin middleware:", error.message);
-        res.status(401).json({ success: false, message: "Unauthorized: " + error.message });
+        console.error("❌ Error in isLogin middleware:", error.message);
+        return res.status(500).json({
+            success: false,
+            message: "Server error in isLogin middleware"
+        });
     }
 };
 
@@ -42,86 +61,3 @@ export default isLogin;
 
 
 
-// import jwt from 'jsonwebtoken'
-// import User from '../Models/userModels.js'
-
-// const isLogin = (req, res, next) => {
-//     try {
-//         const token = req.cookies.jwt
-//         if (!token) return res.status(500).send({ success: false, message: "User Unauthorize" });
-//         const decode = jwt.verify(token, process.env.JWT_SECRET);
-//         if (!decode) return res.status(500).send({ success: false, message: "User Unauthorize -Invalid Token" })
-//         const user = User.findById(decode.userId).select("-password");
-//         if (!user) return res.status(500).send({ success: false, message: "User not found" })
-//         req.user = user,
-//             next()
-//     } catch (error) {
-//         console.log(`error in isLogin middleware ${error.message}`);
-//         res.status(500).send({
-//             success: false,
-//             message: error
-//         })
-//     }
-// }
-
-// export default isLogin
-
-
-
-
-
-// import User from "../Models/userModels.js";
-// import bcrypt from "bcryptjs";
-// import jwt from "jsonwebtoken";
-
-// export const isLogin = async (req, res) => {
-//     try {
-//         const { email, password } = req.body;
-
-//         // 1. Check if user exists
-//         const user = await User.findOne({ email });
-//         if (!user) {
-//             return res.status(400).send({ success: false, message: "Email not registered" });
-//         }
-
-//         // 2. Compare password
-//         const isMatch = await bcrypt.compare(password, user.password);
-//         if (!isMatch) {
-//             return res.status(400).send({ success: false, message: "Invalid credentials" });
-//         }
-
-//         // 3. Generate JWT
-//         const token = jwt.sign(
-//             { userId: user._id },
-//             process.env.JWT_SECRET,
-//             { expiresIn: "7d" } // 7 days expiry
-//         );
-
-//         // 4. Store token in cookie
-//         res.cookie("jwt", token, {
-//             httpOnly: true, // prevents JS access
-//             secure: process.env.NODE_ENV === "production", // only https in prod
-//             sameSite: "strict",
-//             maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
-//         });
-
-//         // 5. Return response
-//         res.status(200).send({
-//             success: true,
-//             message: "Login successful",
-//             user: {
-//                 _id: user._id,
-//                 email: user.email,
-//                 userName: user.userName
-//             }
-//         });
-
-//     } catch (error) {
-//         console.error("Error in login:", error.message);
-//         res.status(500).send({
-//             success: false,
-//             message: "Server error: " + error.message
-//         });
-//     }
-// };
-// export default isLogin;

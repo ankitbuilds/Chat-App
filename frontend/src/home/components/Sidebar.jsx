@@ -6,6 +6,8 @@ import { useAuth } from '../../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { IoArrowBackSharp } from 'react-icons/io5';
 import { BiLogOut } from "react-icons/bi";
+import userConversation from '../../zustand/userConversation';
+
 
 
 const Sidebar = () => {
@@ -16,7 +18,8 @@ const Sidebar = () => {
     const [searchUser, setSearchUser] = useState([]);
     const [loading, setLoading] = useState(false);
     const [chatUser, setChatUser] = useState([]);
-    const [selectedUserId, setselectedUserId] = useState(null);
+    const [selectedUserId, setSelectedUserId] = useState(null);
+    const { messages, selectedConversation, setSelectedConversation } = userConversation();
 
     // Fetch current chat users
     useEffect(() => {
@@ -34,7 +37,6 @@ const Sidebar = () => {
                     toast.error(res.data.message || "Failed to fetch chat users");
                 }
             } catch (error) {
-                console.error("Chat users fetch error:", error);
                 toast.error("Error fetching chat users");
             } finally {
                 setLoading(false);
@@ -85,7 +87,9 @@ const Sidebar = () => {
 
     // handle user click
     const handleUserClick = (user) => {
-        setselectedUserId(user._id);
+
+        setSelectedUserId(user._id);
+        setSelectedConversation(user);
     };
     //back from search result
     const handleSearchback = () => {
@@ -122,6 +126,15 @@ const Sidebar = () => {
 
     return (
         <div className='h-full w-auto px-1'>
+            <div className="flex gap-2 m-2">
+                <img
+                    onClick={() => navigate(`/profile/${authUser?._id}`)}
+                    src={authUser?.profilepic}
+                    alt="Profile"
+                    className="self-center h-12 w-12 hover:scale-105 cursor-pointer rounded-full"
+                />
+                <span className="text-black font-bold items-center">{authUser?.fullname}</span>
+            </div>
             <div className='flex justify-between gap-2'>
                 <form onSubmit={handleSearchSubmit} className='w-auto flex items-center justify-between bg-white rounded'>
                     <input
@@ -135,12 +148,6 @@ const Sidebar = () => {
                         <FaSearch />
                     </button>
                 </form>
-                <img
-                    onClick={() => navigate(`/profile/${authUser?._id}`)}
-                    src={authUser?.profilepic}
-                    alt="Profile"
-                    className="self-center h-12 w-12 hover:scale-105 cursor-pointer rounded-full"
-                />
             </div>
 
             <div className="divider px-3"></div>
@@ -163,7 +170,7 @@ const Sidebar = () => {
                                     </div>
                                 </div>
                                 <div className="flex flex-col flex-1">
-                                    <p className="font-bold text-grey-950">{user.username}</p>
+                                    <p className="font-bold text-black">{user.username}</p>
                                 </div>
                             </div>
                         ))}
@@ -194,8 +201,8 @@ const Sidebar = () => {
                                                 </div>
                                             </div>
                                             <div className="flex flex-col flex-1">
-                                                <p className="font-bold text-grey-950">{user.username}</p>
-                                                <span className="text-sm text-gray-600">{user.fullName}</span>
+                                                <p className="font-bold text-black">{user.username}</p>
+                                                <span className="text-sm text-black">{user.fullName}</span>
                                             </div>
                                         </div>
                                         <div className="divider divide-solid px-3 h-[1px]"></div>

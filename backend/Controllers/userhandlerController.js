@@ -2,36 +2,68 @@ import User from '../Models/userModels.js';
 import Conversation from '../Models/conversationModels.js'; // make sure this is imported
 
 // Search users
+// export const getUserBySearch = async (req, res) => {
+//     try {
+//         // Match frontend param name: "search"
+//         const search = req.query.search?.trim();
+
+//         if (!search) {
+//             return res.status(200).json({ success: true, users: [] });
+//         }
+
+//         // Exclude current user if available
+//         const currentUserID = req.user?._id;
+
+//         const users = await User.find({
+//             $and: [
+//                 {
+//                     $or: [
+//                         { fullname: { $regex: search, $options: "i" } },
+//                         { username: { $regex: search, $options: "i" } }
+//                     ]
+//                 },
+//                 currentUserID ? { _id: { $ne: currentUserID } } : {}
+//             ]
+//         }).select("-password");
+
+//         return res.status(200).json({ success: true, users });
+//     } catch (error) {
+//         console.error("🔥 Search error:", error.message);
+//         res.status(500).json({ success: false, message: "Server error" });
+//     }
+// };
+
 export const getUserBySearch = async (req, res) => {
     try {
-        // Match frontend param name: "search"
         const search = req.query.search?.trim();
 
         if (!search) {
             return res.status(200).json({ success: true, users: [] });
         }
 
-        // Exclude current user if available
-        const currentUserID = req.user?._id;
-
-        const users = await User.find({
-            $and: [
-                {
-                    $or: [
-                        { fullname: { $regex: search, $options: "i" } },
-                        { username: { $regex: search, $options: "i" } }
-                    ]
-                },
-                currentUserID ? { _id: { $ne: currentUserID } } : {}
+        // Build base conditions
+        const conditions = {
+            $or: [
+                { fullname: { $regex: search, $options: "i" } },
+                { username: { $regex: search, $options: "i" } }
             ]
-        }).select("-password");
+        };
+
+        // Exclude current user if middleware sets req.user
+        if (req.user?._id) {
+            conditions._id = { $ne: req.user._id };
+        }
+
+        // Fetch users excluding password field
+        const users = await User.find(conditions).select("-password");
 
         return res.status(200).json({ success: true, users });
     } catch (error) {
         console.error("🔥 Search error:", error.message);
-        res.status(500).json({ success: false, message: "Server error" });
+        return res.status(500).json({ success: false, message: "Server error" });
     }
 };
+
 
 
 // Get current chatters

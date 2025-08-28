@@ -1,6 +1,7 @@
+
+
 import User from "../Models/userModels.js";
 import bcryptjs from 'bcryptjs'
-import jwtToken from '../utils/jwtwebToken.js'
 import jwt from 'jsonwebtoken'
 
 export const userRegister = async (req, res) => {
@@ -8,20 +9,18 @@ export const userRegister = async (req, res) => {
         const { fullname, username, email, gender, password, profilepic } = req.body;
 
         // Check if username OR email exists
-        const user = await User.findOne({ $or: [{ username }, { email }] });
-
-        if (fullname && username && email && gender && password && profilepic) {
-            console.log(fullname, username, email, gender, password, profilepic)
-        }
-
-        if (user) {
-            return res.status(400).send({
+        const userExists = await User.findOne({ $or: [{ username }, { email }] });
+        if (userExists) {
+            return res.status(400).json({
                 success: false,
                 message: "Username or Email already exists",
             });
         }
 
+        // Hash password
         const hashPassword = bcryptjs.hashSync(password, 10);
+
+        // Default avatar
         const profileBoy = profilepic || `https://avatar.iran.liara.run/public/boy?username=${username}`;
         const profileGirl = profilepic || `https://avatar.iran.liara.run/public/girl?username=${username}`;
 
@@ -36,34 +35,43 @@ export const userRegister = async (req, res) => {
 
         await newUser.save();
 
-        // Generate and send JWT (assumes jwtToken sets cookie but doesn't send response)
-        jwtToken(newUser._id, res);
+        // Generate JWT
+        const token = jwt.sign(
+            { id: newUser._id },
+            process.env.JWT_SECRET,
+            { expiresIn: "7d" }
+        );
 
-        return res.status(201).send({
+        return res.status(201).json({
             success: true,
-            _id: newUser._id,
-            fullname: newUser.fullname,
-            username: newUser.username,
-            profilepic: newUser.profilepic,
-            email: newUser.email,
+            message: "User registered successfully",
+            token,
+            user: {
+                _id: newUser._id,
+                fullname: newUser.fullname,
+                username: newUser.username,
+                profilepic: newUser.profilepic,
+                email: newUser.email,
+            }
         });
 
     } catch (error) {
         console.error("Registration Error:", error);
-        return res.status(500).send({
+        return res.status(500).json({
             success: false,
             message: error.message || "Internal Server Error",
         });
     }
 };
+
+
 export const getAllUsers = async (req, res) => {
     try {
         const users = await User.find({});
-        console.log(users);
-        return res.status(201).send(users);
+        return res.status(200).json(users);
     } catch (err) {
         console.error(err);
-        return err;
+        return res.status(500).json({ success: false, message: "Error fetching users" });
     }
 }
 
@@ -94,14 +102,14 @@ export const userLogin = async (req, res) => {
         const token = jwt.sign(
             { id: user._id },
             process.env.JWT_SECRET,
-            { expiresIn: "1d" }
+            { expiresIn: "7d" }
         );
 
         // return user info + token
         return res.status(200).json({
             success: true,
             message: "Successfully logged in",
-            token, // frontend will use this
+            token,
             user: {
                 _id: user._id,
                 fullname: user.fullname,
@@ -121,34 +129,8 @@ export const userLogin = async (req, res) => {
 
 
 
-// export const userLogin = async (req, res) => {
-//     try {
-//         const { email, password } = req.body;
-//         const user = await User.findOne({ email })
-//         if (!user) return res.status(500).send({ success: false, message: "Email Doesn't exist register" })
-//         const comparePass = bcryptjs.compareSync(password, user.password || "");
-//         if (!comparePass) return res.status(500).send({ success: false, message: "Email or password doesn't match" })
 
-//         jwtToken(user._id, res)
-//         res.send(200).send({
-//             _id: user.fullname,
-//             fullname: user.fullname,
-//             username: user.username,
-//             profilepic: user.profilepic,
-//             email: user.email,
-//             message: "Successfully Login"
-//         })
 
-//     }
-//     catch (error) {
-//         res.status(500).send({
-//             success: false,
-//             message: error,
-//         })
-//         console.log(error);
-
-//     }
-// }
 
 export const userLogout = async (req, res) => {
     try {

@@ -9,20 +9,21 @@ export const Login = () => {
   const navigate = useNavigate();
   const { setAuthUser } = useAuth();
   const [userInput, setUserInput] = useState({});
-  const [loading, setLoading] = useState(false)
+  const [loading, setLoading] = useState(false);
 
   const handleInput = (e) => {
     setUserInput({
-      ...userInput, [e.target.id]: e.target.value
-    })
+      ...userInput,
+      [e.target.id]: e.target.value
+    });
+  };
 
-  }
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
 
     try {
-      const login = await axios.post(`/api/auth/login`, userInput, { withCredentials: true }); // ✅ include cookies
+      const login = await axios.post(`/api/auth/login`, userInput, { withCredentials: true });
       const data = login.data;
 
       if (!data.success) {
@@ -32,17 +33,20 @@ export const Login = () => {
       }
 
       toast.success(data.message);
-      localStorage.setItem('chatapp', JSON.stringify(data));
-      setAuthUser(data);
+
+      // ✅ FIX: Save both user and token
+      const userData = { ...data.user, token: data.token };
+      localStorage.setItem("chatapp", JSON.stringify(userData));
+      setAuthUser(userData);
+
       setLoading(false);
-      navigate('/');
+      navigate("/");
     } catch (error) {
       setLoading(false);
       toast.error(error.response?.data?.message || "Login failed. Please try again.");
       console.log(error);
     }
   };
-
   return (
     <div className='flex flex-col items-center justify-center mix-w-full mx-auto'>
       <div className="w-full p-6 rounded-lg shadow-lg bg-gray-400 bg-clip-padding backdrop-filter backdrop-blur">
