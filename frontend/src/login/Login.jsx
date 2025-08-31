@@ -34,9 +34,14 @@ export const Login = () => {
 
       toast.success(data.message);
 
-      // ✅ FIX: Save both user and token
+      // ✅ Save token separately for API calls
+      localStorage.setItem("token", data.token);
+
+      // ✅ Save user object (optional)
       const userData = { ...data.user, token: data.token };
       localStorage.setItem("chatapp", JSON.stringify(userData));
+
+      // ✅ Update context
       setAuthUser(userData);
 
       setLoading(false);
@@ -47,6 +52,7 @@ export const Login = () => {
       console.log(error);
     }
   };
+
   return (
     <div className='flex flex-col items-center justify-center mix-w-full mx-auto'>
       <div className="w-full p-6 rounded-lg shadow-lg bg-gray-400 bg-clip-padding backdrop-filter backdrop-blur">

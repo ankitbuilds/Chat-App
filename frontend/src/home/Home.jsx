@@ -22,10 +22,10 @@ const Home = () => {
         md:h-full rounded-xl shadow-lg bg-[#f0f0f0] bg-clip-padding
         backdrop-filter bckdrop-blur-lg bg-opacity-0">
             <div className={` py-2 md:flex ${isSidebarVisible ? '' : 'hidden'}`}>
-                <Sidebar onSelecteUser={handleUserSelect} />
+                <Sidebar onSelectUser={handleUserSelect} />
             </div>
             <div className={`divider divider-horizontal px-3 md:flex ${isSidebarVisible ? '' : 'hidden'} ${selectedUser ? 'block' : 'hidden'}`}></div>
-            <div className={`flex-auto ${selectedUser ? 'flex' : 'hidden md:flex'} bg-white`}>
+            <div className={`flex-auto ${selectedUser ? '' : 'hidden md:flex'} bg-white`}>
                 <MessageContainer onBackUser={handleShowSidebar} />
             </div>
         </div>

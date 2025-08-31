@@ -10,7 +10,7 @@ import userConversation from '../../zustand/userConversation';
 
 
 
-const Sidebar = () => {
+const Sidebar = ({ onSelectUser }) => {
     const navigate = useNavigate();
     const { authUser, setAuthUser } = useAuth();
 
@@ -87,7 +87,7 @@ const Sidebar = () => {
 
     // handle user click
     const handleUserClick = (user) => {
-
+        onSelectUser(user);
         setSelectedUserId(user._id);
         setSelectedConversation(user);
     };
