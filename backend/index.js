@@ -7,7 +7,8 @@ import cookieParser from 'cookie-parser';
 import userRouter from './route/userRoute.js'
 import cors from "cors";
 
-const app = express();
+import { app, server } from './Socket/socket.js'
+
 dotenv.config();
 
 dbconnect();
@@ -28,7 +29,7 @@ app.use('/api/message', messageRouter)
 app.use('/api/user', userRouter)
 const PORT = process.env.PORT || 3000;
 
-app.listen(PORT, () => {
+server.listen(PORT, () => {
 
     console.log(`server is running at ${PORT}`);
 })

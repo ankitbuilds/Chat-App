@@ -6,7 +6,8 @@ import { useAuth } from '../../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { IoArrowBackSharp } from 'react-icons/io5';
 import { BiLogOut } from "react-icons/bi";
-import userConversation from '../../zustand/userConversation';
+import userConversation from '../../Zustand/userConversation';
+import { useSocketContext } from '../../context/socketContext';
 
 
 
@@ -20,6 +21,13 @@ const Sidebar = ({ onSelectUser }) => {
     const [chatUser, setChatUser] = useState([]);
     const [selectedUserId, setSelectedUserId] = useState(null);
     const { messages, selectedConversation, setSelectedConversation } = userConversation();
+    const { onlineUser, socket } = useSocketContext();
+
+    const nowOnline = chatUser.map((user) => (user._id));
+    //chat function
+    const isOnline = nowOnline.map(userId => onlineUser.includes(userId));
+
+
 
     // Fetch current chat users
     useEffect(() => {
@@ -157,14 +165,14 @@ const Sidebar = ({ onSelectUser }) => {
             ) : searchUser.length > 0 ? (
                 <>
                     <div className="overflow-y-auto max-h-[80%] scrollbar">
-                        {searchUser.map((user) => (
+                        {searchUser.map((user, index) => (
                             <div
                                 key={user._id}
                                 onClick={() => handleUserClick(user)}
                                 className={`flex gap-3 items-center rounded p-2 py-1 cursor-pointer
                                 ${selectedUserId === user?._id ? `bg-sky-500` : ''}`}
                             >
-                                <div className="avatar">
+                                <div className={`avatar ${isOnline[index] ? 'online' : ''}`}>
                                     <div className="w-12 rounded-full">
                                         <img src={user.profilepic} alt={user.fullName} className="h-10 w-10 rounded-full" />
                                     </div>
@@ -188,14 +196,14 @@ const Sidebar = ({ onSelectUser }) => {
                                     <h1>Why are you alone</h1>
                                 </div>
                             ) : (
-                                chatUser.map((user) => (
+                                chatUser.map((user, index) => (
                                     <div key={user._id}>
                                         <div
                                             onClick={() => handleUserClick(user)}
                                             className={`flex gap-3 items-center rounded p-2 py-1 cursor-pointer
                                         ${selectedUserId === user?._id ? `bg-sky-500` : ''}`}
                                         >
-                                            <div className="avatar">
+                                            <div className={`avatar ${isOnline[index] ? 'online' : ''}`}>
                                                 <div className="w-12 rounded-full">
                                                     <img src={user.profilepic} alt={user.fullName} className="h-10 w-10 rounded-full" />
                                                 </div>
