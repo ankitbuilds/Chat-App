@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react'
-import userConversation from '../../Zustand/userConversation.js';
+import userConversation from '../../zustand/userConversation.js';
 import { useAuth } from '../../context/AuthContext';
 import { TiMessages } from "react-icons/ti";
 import { IoArrowBackSharp, IoSend } from 'react-icons/io5';
