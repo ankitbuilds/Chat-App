@@ -60,9 +60,9 @@ const __dirname = path.resolve();
 dotenv.config();
 
 dbconnect();
-// app.get('/', (req, res) => {
-//     res.send('hello');
-// })
+app.get('/', (req, res) => {
+    res.send('hello');
+})
 
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
@@ -72,9 +72,9 @@ app.use(cors({
     credentials: true
 }));
 
-app.use(express.static(path.join(__dirname, "/frontend/dist")))
+app.use(express.static(path.join(__dirname, "frontend/dist")))
 
-app.get(/.*/, (req, res) => {
+app.get("/", (req, res) => {
     res.sendFile(path.join(__dirname, "frontend", "dist", "index.html"));
 });
 app.use('/api/auth', authRouter)
@@ -86,3 +86,4 @@ server.listen(PORT, () => {
 
     console.log(`server is running at ${PORT}`);
 })
+
