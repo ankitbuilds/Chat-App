@@ -29,6 +29,12 @@ const Sidebar = ({ onSelectUser }) => {
 
 
 
+    useEffect(() => {
+        socket?.on("newMessage", (newMessage) => {
+            setNewMessageUsers(newMessage)
+        })
+        return () => socket?.off("newMessage");
+    }, [socket, messages])
     // Fetch current chat users
     useEffect(() => {
         const chatUserHandler = async () => {
@@ -143,7 +149,7 @@ const Sidebar = ({ onSelectUser }) => {
                 />
                 <span className="text-black font-bold items-center">{authUser?.fullname}</span>
             </div>
-            <div className='flex justify-between gap-2'>
+            <div className='block md:flex justify-between gap-2'>
                 <form onSubmit={handleSearchSubmit} className='w-auto flex items-center justify-between bg-white rounded'>
                     <input
                         type="text"
@@ -183,13 +189,13 @@ const Sidebar = ({ onSelectUser }) => {
                             </div>
                         ))}
                     </div>
-                    <div className="mt-auto px-1 py-1 flex cursor-pointer" onClick={handleSearchback}>
+                    <div className="mt-2 px-1 py-1 flex cursor-pointer bg-black rounded" onClick={handleSearchback}>
                         <IoArrowBackSharp size={25} />
                     </div>
                 </>
             ) : (
                 <>
-                    <div className="min-h-[70%] max-h-[80%] overflow-y-auto scrollbar">
+                    <div className="min-h-[60%]  overflow-y-auto scrollbar">
                         <div className="w-auto">
                             {chatUser.length === 0 ? (
                                 <div className="font-bold items-center flex flex-col text-xl text-yellow-500">
@@ -213,17 +219,17 @@ const Sidebar = ({ onSelectUser }) => {
                                                 <span className="text-sm text-black">{user.fullName}</span>
                                             </div>
                                         </div>
-                                        <div className="divider divide-solid px-3 h-[1px]"></div>
+                                        <div className="divider divide-solid bg-gray-400 px-3 h-[1px]"></div>
                                     </div>
                                 ))
                             )}
                         </div>
                     </div>
-                    <div className="mt-auto px-1 py-1 flex">
-                        <button onClick={handleLogOut} className="hover:bg-red-600 w-10 cursor-pointer hover:text-white rounded-lg">
+                    <div className="mt-4 px-1 py-1 flex">
+                        <button onClick={handleLogOut} className=" text-black hover:bg-red-600 w-10 cursor-pointer hover:text-white rounded-lg">
                             <BiLogOut size={25} />
                         </button>
-                        <p>LogOut</p>
+                        <p className="text-black">LogOut</p>
                     </div>
                 </>
             )}

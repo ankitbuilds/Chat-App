@@ -18,14 +18,16 @@ const Home = () => {
         setSelectedUser(null);
     }
     return (
-        <div className="flex justify-between min-w-full md:min-w-[550px]
-        md:h-full rounded-xl shadow-lg bg-[#f0f0f0] bg-clip-padding
-        backdrop-filter bckdrop-blur-lg bg-opacity-0">
-            <div className={` py-2 md:flex ${isSidebarVisible ? '' : 'hidden'}`}>
+        <div className="block md:flex justify-between w-full md-w[550px]
+        rounded-xl shadow-lg
+           bg-[#f0f0f0] bg-clip-padding
+             backdrop-blur-lg 
+            bg-opacity-0">
+            <div className={` p-4 md:flex ${isSidebarVisible ? '' : 'hidden'}`}>
                 <Sidebar onSelectUser={handleUserSelect} />
             </div>
-            <div className={`divider divider-horizontal px-3 md:flex ${isSidebarVisible ? '' : 'hidden'} ${selectedUser ? 'block' : 'hidden'}`}></div>
-            <div className={`flex-auto ${selectedUser ? '' : 'hidden md:flex'} bg-white`}>
+            {/* <div className={`divider divider-horizontal px-1 md:flex ${isSidebarVisible ? '' : 'hidden'} ${selectedUser ? 'block' : 'hidden'}`}></div> */}
+            <div className={`flex-auto ${selectedUser ? '' : 'hidden md:flex'} bg-white justify-center items-center`}>
                 <MessageContainer onBackUser={handleShowSidebar} />
             </div>
         </div>
